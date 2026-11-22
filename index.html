@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Workspace Dashboard — LKP 3A</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="dashboard-layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-logo">TF</div>
+        <div>
+          <h2>TaskFlow</h2>
+          <span>LKP 3A • JS DOM</span>
+        </div>
+      </div>
+
+      <div class="user-card">
+        <div class="avatar">DP</div>
+        <div class="user-info">
+          <strong>Dimas Pandu W.</strong>
+          <span>TI24B • UMC</span>
+        </div>
+      </div>
+
+      <nav class="nav-menu" aria-label="Filter Utama">
+        <p class="nav-label">TAMPILAN</p>
+        <button type="button" class="nav-item active" data-filter="semua">
+          <span>Semua Tugas</span>
+          <span class="nav-count" id="count-semua">0</span>
+        </button>
+        <button type="button" class="nav-item" data-filter="aktif">
+          <span>Sedang Berjalan</span>
+          <span class="nav-count" id="count-aktif">0</span>
+        </button>
+        <button type="button" class="nav-item" data-filter="selesai">
+          <span>Selesai</span>
+          <span class="nav-count" id="count-selesai">0</span>
+        </button>
+        <button type="button" class="nav-item" data-filter="tinggi">
+          <span>Prioritas Tinggi</span>
+          <span class="nav-count badge-alert" id="count-tinggi">0</span>
+        </button>
+      </nav>
+
+      <div class="progress-widget">
+        <div class="progress-header">
+          <span>Target Selesai</span>
+          <strong id="progress-percent">0%</strong>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="progress-bar" style="width: 0%"></div>
+        </div>
+        <p class="progress-caption" id="progress-caption">Belum ada tugas tercatat</p>
+      </div>
+    </aside>
+
+    <!-- MAIN WORKSPACE -->
+    <div class="main-wrapper">
+      <header class="topbar">
+        <div>
+          <h1 id="view-title">Semua Tugas</h1>
+          <p id="current-date" class="date-text"></p>
+        </div>
+        <div class="topbar-actions">
+          <div class="search-box">
+            <input type="search" id="search-input" placeholder="Cari tugas...">
+          </div>
+          <select id="sort-select" aria-label="Urutkan tugas">
+            <option value="terbaru">Terbaru</option>
+            <option value="prioritas">Prioritas Tertinggi</option>
+            <option value="deadline">Deadline Terdekat</option>
+          </select>
+        </div>
+      </header>
+
+      <!-- KPI STATS CARDS -->
+      <section class="kpi-grid" aria-label="Ringkasan Statistik">
+        <article class="kpi-card">
+          <span class="kpi-title">Total Tugas</span>
+          <strong class="kpi-value" id="stat-total">0</strong>
+          <span class="kpi-sub">Tersimpan di localStorage</span>
+        </article>
+        <article class="kpi-card">
+          <span class="kpi-title">Belum Selesai</span>
+          <strong class="kpi-value text-amber" id="stat-aktif">0</strong>
+          <span class="kpi-sub">Perlu dikerjakan</span>
+        </article>
+        <article class="kpi-card">
+          <span class="kpi-title">Telah Selesai</span>
+          <strong class="kpi-value text-emerald" id="stat-selesai">0</strong>
+          <span class="kpi-sub">Tugas tuntas</span>
+        </article>
+        <article class="kpi-card">
+          <span class="kpi-title">Mendekati / Lewat Deadline</span>
+          <strong class="kpi-value text-terracotta" id="stat-overdue">0</strong>
+          <span class="kpi-sub">Butuh perhatian segera</span>
+        </article>
+      </section>
+
+      <!-- FORM INPUT TUGAS BARU -->
+      <section class="panel form-panel">
+        <form id="form-todo" class="task-form">
+          <input 
+            type="text" 
+            id="input-todo" 
+            placeholder="Apa tugas atau target yang ingin dikerjakan?" 
+            autocomplete="off" 
+            required
+          >
+          <select id="input-kategori" aria-label="Kategori">
+            <option value="Kuliah">Kuliah</option>
+            <option value="Praktikum">Praktikum</option>
+            <option value="Coding">Coding</option>
+            <option value="Pribadi">Pribadi</option>
+          </select>
+          <select id="input-prioritas" aria-label="Prioritas">
+            <option value="sedang" selected>Prioritas: Sedang</option>
+            <option value="tinggi">Prioritas: Tinggi</option>
+            <option value="rendah">Prioritas: Rendah</option>
+          </select>
+          <input type="date" id="input-deadline" aria-label="Tenggat Waktu">
+          <button type="submit" class="btn-submit">+ Tambah Tugas</button>
+        </form>
+      </section>
+
+      <!-- DAFTAR TUGAS -->
+      <section class="panel list-panel">
+        <div class="list-header">
+          <span id="list-summary">Menampilkan 0 tugas</span>
+          <button type="button" id="btn-clear-completed" class="btn-danger-ghost hidden">
+            Bersihkan Tugas Selesai
+          </button>
+        </div>
+
+        <ul id="list-todo" class="todo-list"></ul>
+      </section>
+    </div>
+  </div>
+
+  <!-- MODAL EDIT TUGAS -->
+  <div id="edit-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Edit Detail Tugas</h3>
+        <button type="button" id="btn-close-modal" class="btn-close">&times;</button>
+      </div>
+      <form id="form-edit" class="modal-form">
+        <input type="hidden" id="edit-id">
+        <label>
+          <span>Nama Tugas</span>
+          <input type="text" id="edit-teks" required>
+        </label>
+        <div class="modal-row">
+          <label>
+            <span>Kategori</span>
+            <select id="edit-kategori">
+              <option value="Kuliah">Kuliah</option>
+              <option value="Praktikum">Praktikum</option>
+              <option value="Coding">Coding</option>
+              <option value="Pribadi">Pribadi</option>
+            </select>
+          </label>
+          <label>
+            <span>Prioritas</span>
+            <select id="edit-prioritas">
+              <option value="tinggi">Tinggi</option>
+              <option value="sedang">Sedang</option>
+              <option value="rendah">Rendah</option>
+            </select>
+          </label>
+        </div>
+        <label>
+          <span>Tenggat Waktu (Opsional)</span>
+          <input type="date" id="edit-deadline">
+        </label>
+        <div class="modal-actions">
+          <button type="button" id="btn-cancel-edit" class="btn-secondary">Batal</button>
+          <button type="submit" class="btn-submit">Simpan Perubahan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
